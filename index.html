@@ -1,0 +1,2397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RedFlame – Editing Stories That Inspire Audiences</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #FF6B00;
+    --orange-light: #FF8C38;
+    --orange-glow: rgba(255,107,0,0.35);
+    --dark: #0A0A0A;
+    --dark2: #111111;
+    --dark3: #181818;
+    --dark4: #1E1E1E;
+    --card: #141414;
+    --border: rgba(255,255,255,0.07);
+    --text: #FFFFFF;
+    --muted: #888888;
+    --muted2: #555555;
+    --cream: #F5F0E8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ── CUSTOM CURSOR ── */
+  #cursor {
+    width: 12px; height: 12px;
+    background: var(--orange);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%,-50%);
+    transition: width .2s, height .2s, background .2s;
+    mix-blend-mode: normal;
+  }
+  #cursor-ring {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--orange);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%,-50%);
+    transition: all .15s ease;
+    opacity: .7;
+  }
+  body:has(a:hover) #cursor, body:has(button:hover) #cursor { width: 20px; height: 20px; }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: .025;
+    pointer-events: none;
+    z-index: 9997;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--dark); }
+  ::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 4px; }
+
+  /* ── NAVBAR ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 1000;
+    padding: 0 5%;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 70px;
+    background: rgba(10,10,10,0);
+    backdrop-filter: blur(0px);
+    transition: background .4s, backdrop-filter .4s;
+    border-bottom: 1px solid transparent;
+  }
+  nav.scrolled {
+    background: rgba(10,10,10,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom-color: var(--border);
+  }
+  .nav-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: .05em;
+    color: var(--text);
+    text-decoration: none;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .nav-logo span { color: var(--orange); }
+  .nav-links {
+    display: flex; gap: 36px; list-style: none;
+  }
+  .nav-links a {
+    color: rgba(255,255,255,.7);
+    text-decoration: none;
+    font-size: .85rem;
+    font-weight: 500;
+    letter-spacing: .04em;
+    transition: color .25s;
+    position: relative;
+  }
+  .nav-links a::after {
+    content: '';
+    position: absolute; left: 0; bottom: -4px;
+    width: 0; height: 1px;
+    background: var(--orange);
+    transition: width .3s;
+  }
+  .nav-links a:hover { color: #fff; }
+  .nav-links a:hover::after { width: 100%; }
+  .nav-cta {
+    background: var(--orange);
+    color: #fff;
+    padding: 10px 22px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: .82rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    transition: background .25s, transform .2s, box-shadow .25s;
+    white-space: nowrap;
+  }
+  .nav-cta:hover {
+    background: var(--orange-light);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 30px var(--orange-glow);
+  }
+  .hamburger {
+    display: none;
+    flex-direction: column; gap: 5px; cursor: pointer;
+  }
+  .hamburger span {
+    display: block; width: 24px; height: 2px;
+    background: #fff;
+    transition: all .3s;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    overflow: hidden;
+    padding: 100px 5% 60px;
+    text-align: center;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 30%, rgba(255,107,0,0.18) 0%, transparent 70%),
+                radial-gradient(ellipse 40% 40% at 20% 80%, rgba(255,107,0,0.08) 0%, transparent 60%);
+  }
+  .hero-bg-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,107,0,0.12);
+    border: 1px solid rgba(255,107,0,0.3);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: .75rem;
+    font-weight: 500;
+    color: var(--orange-light);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeUp .8s .2s forwards;
+  }
+  .hero-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--orange);
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: .5; transform: scale(1.5); }
+  }
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3.5rem, 9vw, 8rem);
+    line-height: .95;
+    letter-spacing: .01em;
+    opacity: 0;
+    animation: fadeUp .9s .35s forwards;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--orange);
+    position: relative;
+    display: inline-block;
+  }
+  .hero h1 em::after {
+    content: '';
+    position: absolute; left: 0; bottom: -4px; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--orange), transparent);
+    border-radius: 2px;
+  }
+  .hero-sub {
+    max-width: 540px;
+    margin: 24px auto 40px;
+    color: rgba(255,255,255,.55);
+    font-size: 1rem;
+    line-height: 1.7;
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp .9s .5s forwards;
+  }
+  .hero-btns {
+    display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    opacity: 0;
+    animation: fadeUp .9s .65s forwards;
+  }
+  .btn-primary {
+    background: var(--orange);
+    color: #fff;
+    padding: 14px 32px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: .9rem;
+    letter-spacing: .04em;
+    display: flex; align-items: center; gap: 10px;
+    transition: all .3s;
+    position: relative; overflow: hidden;
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,.15), transparent);
+    transform: translateX(-100%);
+    transition: transform .4s;
+  }
+  .btn-primary:hover::before { transform: translateX(0); }
+  .btn-primary:hover {
+    box-shadow: 0 12px 40px var(--orange-glow);
+    transform: translateY(-2px);
+  }
+  .btn-outline {
+    border: 1px solid rgba(255,255,255,.2);
+    color: #fff;
+    padding: 14px 32px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: .9rem;
+    letter-spacing: .04em;
+    transition: all .3s;
+    backdrop-filter: blur(8px);
+  }
+  .btn-outline:hover {
+    border-color: var(--orange);
+    color: var(--orange);
+    background: rgba(255,107,0,0.06);
+  }
+
+  /* ── HERO VIDEO MOCKUP ── */
+  .hero-mockup {
+    margin-top: 70px;
+    position: relative;
+    width: 100%;
+    max-width: 820px;
+    opacity: 0;
+    animation: fadeUp 1s .9s forwards;
+  }
+  .mockup-frame {
+    background: var(--dark3);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 40px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.04);
+  }
+  .mockup-topbar {
+    background: var(--dark4);
+    padding: 12px 18px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .mockup-dot:nth-child(1) { background: #FF5F57; }
+  .mockup-dot:nth-child(2) { background: #FEBC2E; }
+  .mockup-dot:nth-child(3) { background: #28C840; }
+  .mockup-screen {
+    height: 340px;
+    background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 50%, #0d0d0d 100%);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .mockup-screen-person {
+    position: absolute;
+    right: 15%;
+    top: 0; bottom: 0;
+    width: 240px;
+    background: linear-gradient(180deg, transparent 0%, #1a1a1a 90%);
+  }
+  .mockup-screen-person::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 60% 30%, rgba(255,107,0,0.2) 0%, transparent 70%);
+  }
+  /* Animated person silhouette */
+  .person-silhouette {
+    position: absolute;
+    right: 80px;
+    top: 20px;
+    width: 180px;
+    height: 280px;
+  }
+  .person-silhouette svg { width: 100%; height: 100%; }
+  .play-btn-big {
+    width: 70px; height: 70px;
+    background: var(--orange);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: transform .3s, box-shadow .3s;
+    position: relative; z-index: 2;
+    animation: playPulse 2.5s infinite;
+  }
+  @keyframes playPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(255,107,0,.4); }
+    50% { box-shadow: 0 0 0 20px rgba(255,107,0,0); }
+  }
+  .play-btn-big:hover { transform: scale(1.1); }
+  .play-btn-big svg { margin-left: 5px; }
+  .mockup-timeline {
+    background: var(--dark4);
+    padding: 16px 18px;
+    border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .timeline-bar {
+    height: 6px;
+    background: rgba(255,255,255,.08);
+    border-radius: 3px;
+    position: relative;
+    overflow: hidden;
+  }
+  .timeline-bar::after {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    border-radius: 3px;
+    background: var(--orange);
+    animation: timelineProgress 4s ease-in-out infinite alternate;
+  }
+  .timeline-bar:nth-child(1)::after { width: 65%; animation-delay: 0s; }
+  .timeline-bar:nth-child(2)::after { width: 40%; animation-delay: .3s; background: rgba(255,107,0,.5); }
+  .timeline-bar:nth-child(3)::after { width: 80%; animation-delay: .6s; background: rgba(255,107,0,.3); }
+  @keyframes timelineProgress {
+    0% { width: 10%; }
+    100% { width: 90%; }
+  }
+  .mockup-glow {
+    position: absolute;
+    inset: -30px;
+    background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(255,107,0,0.15) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  /* ── BRAND LOGOS ── */
+  .brands {
+    padding: 50px 5%;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--dark2);
+    overflow: hidden;
+  }
+  .brands-label {
+    text-align: center;
+    font-size: .72rem;
+    letter-spacing: .15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+  .brands-track-wrap { overflow: hidden; }
+  .brands-track {
+    display: flex; gap: 60px; align-items: center;
+    animation: marquee 20s linear infinite;
+    width: max-content;
+  }
+  .brands-track:hover { animation-play-state: paused; }
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .brand-item {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: .1em;
+    color: var(--muted2);
+    white-space: nowrap;
+    transition: color .3s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .brand-item:hover { color: rgba(255,255,255,.5); }
+  .brand-icon { width: 20px; height: 20px; opacity: .5; }
+
+  /* ── ABOUT SECTION ── */
+  .about {
+    padding: 120px 5%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .about-img {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    aspect-ratio: 4/5;
+  }
+  .about-img-inner {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #1a1a1a 0%, #252525 50%, #1a1a1a 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .about-img-inner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 30% 40%, rgba(255,107,0,0.2) 0%, transparent 60%);
+  }
+  .about-editor-mockup {
+    position: relative; z-index: 1;
+    width: 85%;
+  }
+  .about-img-badge {
+    position: absolute;
+    bottom: -1px; left: -1px; right: -1px;
+    background: linear-gradient(to top, rgba(10,10,10,1) 0%, transparent 100%);
+    height: 50%;
+    pointer-events: none;
+  }
+  .about-text { }
+  .section-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: .72rem;
+    letter-spacing: .15em;
+    color: var(--orange);
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+  .section-eyebrow::before {
+    content: '';
+    display: block;
+    width: 24px; height: 2px;
+    background: var(--orange);
+    border-radius: 1px;
+  }
+  .section-h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4.2rem);
+    line-height: 1;
+    letter-spacing: .02em;
+    margin-bottom: 24px;
+  }
+  .section-h2 .highlight { color: var(--orange); }
+  .about-body {
+    color: rgba(255,255,255,.55);
+    font-size: .95rem;
+    line-height: 1.8;
+    font-weight: 300;
+    margin-bottom: 40px;
+  }
+  .stats-row {
+    display: flex; gap: 40px; flex-wrap: wrap;
+    border-top: 1px solid var(--border);
+    padding-top: 36px;
+  }
+  .stat-item { }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3rem;
+    letter-spacing: .02em;
+    color: var(--orange);
+    line-height: 1;
+    display: block;
+  }
+  .stat-label {
+    font-size: .8rem;
+    color: var(--muted);
+    letter-spacing: .06em;
+    margin-top: 4px;
+    display: block;
+  }
+
+  /* ── FEATURED WORK ── */
+  .featured {
+    padding: 100px 5%;
+    background: var(--dark2);
+  }
+  .section-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 50px;
+    flex-wrap: wrap; gap: 20px;
+  }
+  .section-header-left { }
+  .work-filters {
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 8px 18px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .78rem;
+    cursor: pointer;
+    transition: all .25s;
+    letter-spacing: .04em;
+  }
+  .filter-btn.active, .filter-btn:hover {
+    background: var(--orange);
+    border-color: var(--orange);
+    color: #fff;
+  }
+  .work-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .work-card {
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 16/9;
+    cursor: pointer;
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    transition: transform .4s cubic-bezier(.23,1,.32,1), box-shadow .4s;
+  }
+  .work-card:hover {
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 30px 70px rgba(0,0,0,.6);
+    z-index: 10;
+  }
+  .work-card-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .6s ease;
+  }
+  .work-card:hover .work-card-img { transform: scale(1.05); }
+  .work-card-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity .35s;
+    display: flex; align-items: flex-end;
+    padding: 20px;
+  }
+  .work-card:hover .work-card-overlay { opacity: 1; }
+  .work-card-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: .9rem;
+    color: #fff;
+  }
+  .work-play {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%) scale(.8);
+    width: 50px; height: 50px;
+    background: rgba(255,107,0,.9);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity .3s, transform .3s;
+  }
+  .work-card:hover .work-play {
+    opacity: 1;
+    transform: translate(-50%,-50%) scale(1);
+  }
+  /* Mock thumbnail backgrounds */
+  .work-card-bg {
+    width: 100%; height: 100%;
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    letter-spacing: .1em;
+    color: rgba(255,255,255,.15);
+    text-align: center;
+    padding: 20px;
+  }
+  .work-card:nth-child(1) .work-card-bg { background: linear-gradient(135deg, #1a0e00, #3d1f00); }
+  .work-card:nth-child(2) .work-card-bg { background: linear-gradient(135deg, #0a0a1a, #1a1a3d); }
+  .work-card:nth-child(3) .work-card-bg { background: linear-gradient(135deg, #0d1a0d, #1a3d1a); }
+  .work-card:nth-child(4) .work-card-bg { background: linear-gradient(135deg, #1a0a0a, #3d1a1a); }
+  .work-card-label {
+    position: absolute; top: 14px; left: 14px;
+    background: var(--orange);
+    color: #fff;
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .work-card-large { grid-column: span 2; }
+
+  /* ── TESTIMONIALS ── */
+  .testimonials {
+    padding: 120px 5%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .testi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    align-items: center;
+    margin-top: 60px;
+  }
+  .testi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px;
+    position: relative;
+    transition: border-color .3s, box-shadow .3s;
+  }
+  .testi-card:hover {
+    border-color: rgba(255,107,0,0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,.4);
+  }
+  .testi-quote {
+    font-size: 4rem;
+    color: var(--orange);
+    line-height: .8;
+    font-family: 'Bebas Neue', sans-serif;
+    margin-bottom: 16px;
+    opacity: .6;
+  }
+  .testi-stars {
+    display: flex; gap: 4px; margin-bottom: 20px;
+  }
+  .star { color: #FFB800; font-size: 1rem; }
+  .testi-text {
+    font-size: .95rem;
+    line-height: 1.75;
+    color: rgba(255,255,255,.7);
+    font-style: italic;
+    font-weight: 300;
+    margin-bottom: 28px;
+  }
+  .testi-author {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .testi-avatar {
+    width: 46px; height: 46px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), #ff8c38);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    color: #fff;
+    flex-shrink: 0;
+    border: 2px solid rgba(255,107,0,0.4);
+  }
+  .testi-author-info { }
+  .testi-name {
+    font-weight: 600;
+    font-size: .9rem;
+    margin-bottom: 2px;
+  }
+  .testi-role { font-size: .78rem; color: var(--muted); }
+  .testi-person-img {
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 3/4;
+    position: relative;
+  }
+  .testi-person-bg {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 40%, #0a0a0a 100%);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .testi-person-bg::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 60% 20%, rgba(255,107,0,0.15) 0%, transparent 70%);
+  }
+  .testi-person-silhouette {
+    position: relative; z-index: 1;
+    width: 65%;
+    opacity: .8;
+  }
+  .testi-dots {
+    display: flex; gap: 8px; margin-top: 24px; justify-content: center;
+  }
+  .testi-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted2);
+    cursor: pointer;
+    transition: background .25s, width .25s;
+  }
+  .testi-dot.active { background: var(--orange); width: 24px; border-radius: 4px; }
+
+  /* ── SERVICES ── */
+  .services {
+    padding: 120px 5%;
+    background: var(--dark2);
+  }
+  .services-inner { max-width: 1200px; margin: 0 auto; }
+  .services-header {
+    text-align: center; margin-bottom: 60px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  .service-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px 24px;
+    transition: all .35s cubic-bezier(.23,1,.32,1);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    group: '';
+  }
+  .service-card::before {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; top: 100%;
+    background: linear-gradient(to top, rgba(255,107,0,0.08), transparent);
+    transition: top .35s;
+  }
+  .service-card:hover::before { top: 0; }
+  .service-card:hover {
+    border-color: rgba(255,107,0,0.4);
+    transform: translateY(-6px);
+    box-shadow: 0 24px 60px rgba(0,0,0,.5);
+  }
+  .service-icon {
+    width: 48px; height: 48px;
+    background: rgba(255,107,0,0.12);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 20px;
+    transition: background .35s;
+    border: 1px solid rgba(255,107,0,0.2);
+  }
+  .service-card:hover .service-icon { background: rgba(255,107,0,0.22); }
+  .service-icon svg { width: 22px; height: 22px; stroke: var(--orange); }
+  .service-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
+  .service-desc {
+    font-size: .83rem;
+    color: rgba(255,255,255,.5);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+  .service-arrow {
+    position: absolute; top: 24px; right: 24px;
+    width: 28px; height: 28px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .3s;
+  }
+  .service-card:hover .service-arrow {
+    background: var(--orange);
+    border-color: var(--orange);
+  }
+  .service-arrow svg { width: 12px; height: 12px; stroke: #fff; }
+
+  /* ── PROCESS ── */
+  .process {
+    padding: 120px 5%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .process-header { text-align: center; margin-bottom: 80px; }
+  .process-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    position: relative;
+  }
+  .process-steps::before {
+    content: '';
+    position: absolute;
+    top: 32px;
+    left: 12.5%; right: 12.5%;
+    height: 1px;
+    background: linear-gradient(90deg, var(--border), var(--orange), var(--border));
+  }
+  .process-step {
+    text-align: center;
+    padding: 0 20px;
+    position: relative;
+  }
+  .process-num {
+    width: 64px; height: 64px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    color: var(--orange);
+    transition: all .35s;
+    position: relative; z-index: 1;
+  }
+  .process-step:hover .process-num {
+    background: var(--orange);
+    border-color: var(--orange);
+    color: #fff;
+    box-shadow: 0 8px 30px var(--orange-glow);
+  }
+  .process-icon {
+    width: 36px; height: 36px;
+    background: rgba(255,107,0,0.1);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 16px;
+  }
+  .process-step-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: .95rem;
+    margin-bottom: 10px;
+  }
+  .process-step-desc {
+    font-size: .8rem;
+    color: rgba(255,255,255,.45);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* ── PROGRESS BAR SECTION ── */
+  .skills-bar-section {
+    padding: 0 5% 80px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .skill-bar-wrap { margin-bottom: 20px; }
+  .skill-bar-top {
+    display: flex; justify-content: space-between;
+    font-size: .82rem; color: rgba(255,255,255,.6); margin-bottom: 8px;
+  }
+  .skill-bar-track {
+    height: 4px;
+    background: rgba(255,255,255,.08);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .skill-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--orange), var(--orange-light));
+    border-radius: 2px;
+    width: 0;
+    transition: width 1.5s cubic-bezier(.23,1,.32,1);
+  }
+
+  /* ── PRICING ── */
+  .pricing {
+    padding: 120px 5%;
+    background: var(--dark2);
+  }
+  .pricing-inner { max-width: 1100px; margin: 0 auto; }
+  .pricing-header { text-align: center; margin-bottom: 60px; }
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr 1fr;
+    gap: 20px;
+    align-items: center;
+  }
+  .pricing-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 36px 28px;
+    transition: all .35s;
+    position: relative;
+    overflow: hidden;
+  }
+  .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+  .pricing-card.featured {
+    background: linear-gradient(135deg, #1a0d00, #251400);
+    border-color: var(--orange);
+    box-shadow: 0 0 60px rgba(255,107,0,0.15);
+    padding: 44px 28px;
+  }
+  .pricing-badge {
+    position: absolute; top: 0; right: 24px;
+    background: var(--orange);
+    color: #fff;
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    padding: 6px 14px;
+    border-radius: 0 0 8px 8px;
+    text-transform: uppercase;
+  }
+  .pricing-plan-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .pricing-card.featured .pricing-plan-name { color: var(--orange); }
+  .pricing-price {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.2rem;
+    letter-spacing: .02em;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .pricing-price sub { font-size: 1.2rem; vertical-align: super; font-family: 'DM Sans', sans-serif; }
+  .pricing-period { font-size: .78rem; color: var(--muted); margin-bottom: 28px; }
+  .pricing-divider {
+    height: 1px;
+    background: var(--border);
+    margin-bottom: 24px;
+  }
+  .pricing-features { list-style: none; margin-bottom: 32px; }
+  .pricing-features li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: .83rem;
+    color: rgba(255,255,255,.6);
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+  }
+  .pricing-features li:last-child { border-bottom: none; }
+  .check-icon { color: var(--orange); font-size: .9rem; flex-shrink: 0; margin-top: 1px; }
+  .pricing-btn {
+    display: block;
+    text-align: center;
+    padding: 14px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: .88rem;
+    letter-spacing: .04em;
+    transition: all .3s;
+    cursor: pointer;
+    border: none;
+    width: 100%;
+  }
+  .pricing-btn-outline {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: rgba(255,255,255,.6);
+  }
+  .pricing-btn-outline:hover {
+    border-color: var(--orange);
+    color: var(--orange);
+    background: rgba(255,107,0,0.06);
+  }
+  .pricing-btn-primary {
+    background: var(--orange);
+    color: #fff;
+  }
+  .pricing-btn-primary:hover {
+    background: var(--orange-light);
+    box-shadow: 0 10px 30px var(--orange-glow);
+    transform: translateY(-1px);
+  }
+
+  /* ── FAQ ── */
+  .faq {
+    padding: 120px 5%;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  .faq-header { text-align: center; margin-bottom: 60px; }
+  .faq-item {
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .faq-question {
+    width: 100%;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 22px 0;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .95rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: color .25s;
+    gap: 20px;
+  }
+  .faq-question:hover { color: var(--orange); }
+  .faq-icon {
+    width: 28px; height: 28px;
+    background: var(--dark3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    transition: all .3s;
+  }
+  .faq-item.open .faq-icon {
+    background: var(--orange);
+    border-color: var(--orange);
+    transform: rotate(45deg);
+  }
+  .faq-icon svg { width: 12px; height: 12px; stroke: #fff; }
+  .faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height .4s ease, padding .4s ease;
+    font-size: .88rem;
+    color: rgba(255,255,255,.5);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+  .faq-item.open .faq-answer { max-height: 300px; padding-bottom: 22px; }
+
+  /* ── CTA SECTION ── */
+  .cta-section {
+    padding: 80px 5%;
+    background: var(--dark2);
+  }
+  .cta-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, #160a00, #1f1000);
+    border: 1px solid rgba(255,107,0,0.3);
+    border-radius: 20px;
+    padding: 70px 60px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-inner::before {
+    content: '';
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 300px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--orange), transparent);
+  }
+  .cta-inner::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 60% 60% at 50% 0%, rgba(255,107,0,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cta-h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    letter-spacing: .02em;
+    margin-bottom: 16px;
+    line-height: 1;
+  }
+  .cta-sub {
+    font-size: .95rem;
+    color: rgba(255,255,255,.55);
+    margin-bottom: 36px;
+    font-weight: 300;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--dark);
+    border-top: 1px solid var(--border);
+    padding: 60px 5% 30px;
+  }
+  .footer-top {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 50px;
+    margin-bottom: 50px;
+  }
+  .footer-brand-desc {
+    font-size: .83rem;
+    color: rgba(255,255,255,.4);
+    line-height: 1.7;
+    margin-top: 16px;
+    font-weight: 300;
+  }
+  .footer-col-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: .78rem;
+    letter-spacing: .12em;
+    color: rgba(255,255,255,.5);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .footer-links { list-style: none; }
+  .footer-links li { margin-bottom: 10px; }
+  .footer-links a {
+    color: rgba(255,255,255,.4);
+    text-decoration: none;
+    font-size: .83rem;
+    transition: color .25s;
+  }
+  .footer-links a:hover { color: var(--orange); }
+  .footer-email-input {
+    display: flex; gap: 0;
+    margin-top: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .footer-email-input input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 10px 14px;
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .82rem;
+    outline: none;
+    min-width: 0;
+  }
+  .footer-email-input input::placeholder { color: var(--muted2); }
+  .footer-email-btn {
+    background: var(--orange);
+    border: none;
+    padding: 10px 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .25s;
+  }
+  .footer-email-btn:hover { background: var(--orange-light); }
+  .footer-email-btn svg { width: 16px; height: 16px; stroke: #fff; }
+  .footer-social {
+    display: flex; gap: 10px; margin-top: 20px;
+  }
+  .social-link {
+    width: 34px; height: 34px;
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    text-decoration: none;
+    transition: all .25s;
+  }
+  .social-link:hover {
+    background: var(--orange);
+    border-color: var(--orange);
+  }
+  .social-link svg { width: 15px; height: 15px; stroke: rgba(255,255,255,.7); }
+  .social-link:hover svg { stroke: #fff; }
+  .footer-bottom {
+    border-top: 1px solid var(--border);
+    padding-top: 28px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .footer-copy {
+    font-size: .78rem;
+    color: rgba(255,255,255,.3);
+  }
+  .footer-copy span { color: var(--orange); }
+
+  /* ── MOBILE NAV MENU ── */
+  .mobile-menu {
+    position: fixed; top: 70px; left: 0; right: 0;
+    background: rgba(10,10,10,0.97);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 5%;
+    z-index: 999;
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+    transform: translateY(-110%);
+    transition: transform .35s cubic-bezier(.23,1,.32,1);
+  }
+  .mobile-menu.open { transform: translateY(0); display: flex; }
+  .mobile-menu a {
+    color: rgba(255,255,255,.7);
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    transition: color .25s;
+  }
+  .mobile-menu a:hover { color: var(--orange); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes floatAnim {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  /* Scroll reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity .8s cubic-bezier(.23,1,.32,1), transform .8s cubic-bezier(.23,1,.32,1);
+  }
+  .reveal.revealed { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: .1s; }
+  .reveal-delay-2 { transition-delay: .2s; }
+  .reveal-delay-3 { transition-delay: .3s; }
+  .reveal-delay-4 { transition-delay: .4s; }
+
+  /* Float cards */
+  .float-card {
+    position: absolute;
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: .78rem;
+    display: flex; align-items: center; gap: 10px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 30px rgba(0,0,0,.5);
+  }
+  .float-card-1 {
+    bottom: 40px; left: -30px;
+    animation: floatAnim 3.5s ease-in-out infinite;
+  }
+  .float-card-2 {
+    top: 50px; right: -20px;
+    animation: floatAnim 4s ease-in-out infinite .5s;
+  }
+  .float-icon {
+    width: 32px; height: 32px;
+    background: rgba(255,107,0,0.15);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .float-card-text { }
+  .float-card-num { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--orange); }
+  .float-card-sub { font-size: .68rem; color: var(--muted); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1024px) {
+    .services-grid { grid-template-columns: repeat(2, 1fr); }
+    .footer-top { grid-template-columns: 1fr 1fr; gap: 36px; }
+    .pricing-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+    .pricing-card.featured { padding: 36px 28px; }
+  }
+
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+    .about { grid-template-columns: 1fr; gap: 50px; }
+    .work-grid { grid-template-columns: 1fr 1fr; }
+    .work-card-large { grid-column: span 1; }
+    .testi-grid { grid-template-columns: 1fr; }
+    .testi-person-img { display: none; }
+    .services-grid { grid-template-columns: 1fr 1fr; }
+    .process-steps { grid-template-columns: 1fr 1fr; gap: 40px; }
+    .process-steps::before { display: none; }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+    .cta-inner { padding: 50px 28px; }
+    .float-card-1, .float-card-2 { display: none; }
+    .hero-mockup { display: none; }
+  }
+  @media (max-width: 540px) {
+    .work-grid { grid-template-columns: 1fr; }
+    .services-grid { grid-template-columns: 1fr; }
+    .process-steps { grid-template-columns: 1fr; }
+    .footer-top { grid-template-columns: 1fr; }
+    .stats-row { gap: 24px; }
+    .nav-cta { display: none; }
+  }
+
+  /* ── ORANGE SCAN LINE ANIMATION ── */
+  .scan-line {
+    position: absolute; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--orange), transparent);
+    opacity: .6;
+    animation: scanLine 4s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes scanLine {
+    0% { top: 0; opacity: 0; }
+    10% { opacity: .6; }
+    90% { opacity: .6; }
+    100% { top: 100%; opacity: 0; }
+  }
+
+  /* ── PARTICLE CANVAS ── */
+  #particles-canvas {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Section background decoration */
+  .sec-deco {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+  }
+
+  /* Glow effect under section headings */
+  .glow-text {
+    text-shadow: 0 0 60px rgba(255,107,0,0.3);
+  }
+  
+  /* Nav orange dot indicator */
+  .nav-active-dot {
+    display: inline-block;
+    width: 5px; height: 5px;
+    background: var(--orange);
+    border-radius: 50%;
+    margin-left: 6px;
+    vertical-align: middle;
+    animation: pulse 1.5s infinite;
+  }
+</style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+
+<!-- ──────────────── NAVBAR ──────────────── -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path d="M9 0L16.5 4.5V13.5L9 18L1.5 13.5V4.5L9 0Z" fill="#FF6B00"/>
+    </svg>
+    Red<span>Flame</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#about">About Us</a></li>
+    <li><a href="#work">Work</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Get Started →</a>
+  <div class="hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobile-menu">
+  <a href="#about" onclick="closeMobileMenu()">About Us</a>
+  <a href="#work" onclick="closeMobileMenu()">Work</a>
+  <a href="#services" onclick="closeMobileMenu()">Services</a>
+  <a href="#pricing" onclick="closeMobileMenu()">Pricing</a>
+  <a href="#faq" onclick="closeMobileMenu()">FAQ</a>
+  <a href="#contact" class="btn-primary" onclick="closeMobileMenu()" style="width:fit-content">Get Started →</a>
+</div>
+
+<!-- ──────────────── HERO ──────────────── -->
+<section class="hero" id="hero">
+  <canvas id="particles-canvas"></canvas>
+  <div class="hero-bg"></div>
+  <div class="hero-bg-grid"></div>
+
+  <div class="hero-badge">
+    <span>🔥 Premium Video Editing Agency</span>
+  </div>
+  <h1 class="glow-text">
+    Editing Stories<br>That <em>Inspire</em><br>Audiences
+  </h1>
+  <p class="hero-sub">
+    Transforming raw footage into cinematic masterpieces. We craft compelling narratives that resonate, engage, and drive action.
+  </p>
+  <div class="hero-btns">
+    <a href="#contact" class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Get a Free Strategy Call
+    </a>
+    <a href="#work" class="btn-outline">View Our Work</a>
+  </div>
+
+  <!-- Hero Mockup -->
+  <div class="hero-mockup" style="position:relative;">
+    <div class="mockup-glow"></div>
+    <div class="mockup-frame">
+      <div class="mockup-topbar">
+        <div class="mockup-dot"></div>
+        <div class="mockup-dot"></div>
+        <div class="mockup-dot"></div>
+        <span style="margin-left:10px; font-size:.72rem; color:var(--muted);">RedFlame Studio — Timeline.rfl</span>
+      </div>
+      <div class="mockup-screen">
+        <div class="scan-line"></div>
+        <!-- Simulated editor person -->
+        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center;">
+          <svg width="200" height="260" viewBox="0 0 200 260" fill="none" style="opacity:.3; position:absolute; right:15%; top:10%;">
+            <ellipse cx="100" cy="50" rx="35" ry="40" fill="rgba(255,107,0,0.4)"/>
+            <path d="M40 260 C40 160 160 160 160 260" fill="rgba(255,107,0,0.2)"/>
+          </svg>
+          <div style="position:absolute; inset:0; background: radial-gradient(ellipse at 70% 30%, rgba(255,107,0,0.15), transparent 60%);"></div>
+        </div>
+        <div class="play-btn-big">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <!-- Floating labels -->
+        <div style="position:absolute; top:16px; left:16px; display:flex; gap:8px;">
+          <span style="background:rgba(255,107,0,0.9); padding:4px 10px; border-radius:4px; font-size:.68rem; font-weight:700; letter-spacing:.06em;">● LIVE</span>
+          <span style="background:rgba(0,0,0,.5); border:1px solid var(--border); padding:4px 10px; border-radius:4px; font-size:.68rem; color:rgba(255,255,255,.6);">4K UHD</span>
+        </div>
+        <div style="position:absolute; bottom:16px; right:16px; background:rgba(0,0,0,.5); border:1px solid var(--border); border-radius:8px; padding:10px 16px; backdrop-filter:blur(8px);">
+          <div style="font-size:.68rem; color:var(--muted); margin-bottom:2px;">Render Progress</div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--orange);">94%</div>
+        </div>
+      </div>
+      <div class="mockup-timeline">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
+          <span style="font-size:.68rem; color:var(--muted);">Video Track 1</span>
+          <span style="font-size:.68rem; color:var(--orange);">00:02:47</span>
+        </div>
+        <div class="timeline-bar"></div>
+        <div class="timeline-bar"></div>
+        <div class="timeline-bar"></div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+          <span style="background:rgba(255,107,0,0.15); border:1px solid rgba(255,107,0,0.3); padding:3px 8px; border-radius:3px; font-size:.6rem; color:var(--orange);">Color Grade</span>
+          <span style="background:rgba(255,255,255,0.05); border:1px solid var(--border); padding:3px 8px; border-radius:3px; font-size:.6rem; color:var(--muted);">Audio Mix</span>
+          <span style="background:rgba(255,255,255,0.05); border:1px solid var(--border); padding:3px 8px; border-radius:3px; font-size:.6rem; color:var(--muted);">Motion FX</span>
+          <span style="background:rgba(255,107,0,0.15); border:1px solid rgba(255,107,0,0.3); padding:3px 8px; border-radius:3px; font-size:.6rem; color:var(--orange);">Captions</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Float cards -->
+    <div class="float-card float-card-1">
+      <div class="float-icon">🎬</div>
+      <div class="float-card-text">
+        <div class="float-card-num">500+</div>
+        <div class="float-card-sub">Projects Delivered</div>
+      </div>
+    </div>
+    <div class="float-card float-card-2">
+      <div class="float-icon">⭐</div>
+      <div class="float-card-text">
+        <div class="float-card-num">5.0</div>
+        <div class="float-card-sub">Client Rating</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────── BRAND LOGOS ──────────────── -->
+<div class="brands">
+  <p class="brands-label">Trusted by creators & brands worldwide</p>
+  <div class="brands-track-wrap">
+    <div class="brands-track">
+      <!-- duplicated for infinite scroll -->
+      <div class="brand-item"><svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2c-.3-1-1-1.8-2-2C19.7 4 12 4 12 4s-7.7 0-9.5.2c-1 .3-1.7 1-2 2C.3 8 .3 12 .3 12s0 4 .2 5.8c.3 1 1 1.8 2 2C4.3 20 12 20 12 20s7.7 0 9.5-.2c1-.3 1.7-1 2-2 .2-1.8.2-5.8.2-5.8s0-4-.2-5.8z"/><path d="M9.7 15.5V8.5l6.3 3.5-6.3 3.5z" fill="white"/></svg>YOUTUBE</div>
+      <div class="brand-item"><svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 3.2.1 4.7 1.7 4.8 4.8.1 1.2.1 1.6.1 4.8 0 3.2 0 3.6-.1 4.8-.1 3.1-1.6 4.7-4.8 4.8-1.2.1-1.6.1-4.8.1-3.2 0-3.6 0-4.8-.1C4 21.3 2.4 19.7 2.3 16.5 2.2 15.3 2.2 14.9 2.2 12c0-3.2 0-3.6.1-4.8C2.4 4 4 2.4 7.2 2.3c1.2-.1 1.6-.1 4.8-.1zM12 0C8.7 0 8.3 0 7.1.1 2.7.3.3 2.7.1 7.1.1 8.3 0 8.7 0 12c0 3.3 0 3.7.1 4.9.2 4.4 2.6 6.8 7 7C8.3 24 8.7 24 12 24s3.7 0 4.9-.1c4.4-.2 6.8-2.6 7-7 .1-1.2.1-1.6.1-4.9 0-3.3 0-3.7-.1-4.9C23.7 2.7 21.3.3 16.9.1 15.7 0 15.3 0 12 0zm0 5.8a6.2 6.2 0 1 0 0 12.4A6.2 6.2 0 0 0 12 5.8zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.4-11.8a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg>INSTAGRAM</div>
+      <div class="brand-item">🎵 TIKTOK</div>
+      <div class="brand-item"><svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.07C24 5.41 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.88v2.26h3.32l-.53 3.5h-2.8V24C19.62 23.1 24 18.1 24 12.07z"/></svg>FACEBOOK</div>
+      <div class="brand-item">🎬 VIMEO</div>
+      <div class="brand-item">📺 TWITCH</div>
+      <div class="brand-item">🎙 SPOTIFY</div>
+      <div class="brand-item">🎯 LINKEDIN</div>
+      <!-- Duplicate for seamless loop -->
+      <div class="brand-item"><svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2c-.3-1-1-1.8-2-2C19.7 4 12 4 12 4s-7.7 0-9.5.2c-1 .3-1.7 1-2 2C.3 8 .3 12 .3 12s0 4 .2 5.8c.3 1 1 1.8 2 2C4.3 20 12 20 12 20s7.7 0 9.5-.2c1-.3 1.7-1 2-2 .2-1.8.2-5.8.2-5.8s0-4-.2-5.8z"/><path d="M9.7 15.5V8.5l6.3 3.5-6.3 3.5z" fill="white"/></svg>YOUTUBE</div>
+      <div class="brand-item"><svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 3.2.1 4.7 1.7 4.8 4.8.1 1.2.1 1.6.1 4.8 0 3.2 0 3.6-.1 4.8-.1 3.1-1.6 4.7-4.8 4.8-1.2.1-1.6.1-4.8.1-3.2 0-3.6 0-4.8-.1C4 21.3 2.4 19.7 2.3 16.5 2.2 15.3 2.2 14.9 2.2 12c0-3.2 0-3.6.1-4.8C2.4 4 4 2.4 7.2 2.3c1.2-.1 1.6-.1 4.8-.1zM12 0C8.7 0 8.3 0 7.1.1 2.7.3.3 2.7.1 7.1.1 8.3 0 8.7 0 12c0 3.3 0 3.7.1 4.9.2 4.4 2.6 6.8 7 7C8.3 24 8.7 24 12 24s3.7 0 4.9-.1c4.4-.2 6.8-2.6 7-7 .1-1.2.1-1.6.1-4.9 0-3.3 0-3.7-.1-4.9C23.7 2.7 21.3.3 16.9.1 15.7 0 15.3 0 12 0zm0 5.8a6.2 6.2 0 1 0 0 12.4A6.2 6.2 0 0 0 12 5.8zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.4-11.8a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg>INSTAGRAM</div>
+      <div class="brand-item">🎵 TIKTOK</div>
+      <div class="brand-item"><svg class="brand-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.07C24 5.41 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.88v2.26h3.32l-.53 3.5h-2.8V24C19.62 23.1 24 18.1 24 12.07z"/></svg>FACEBOOK</div>
+      <div class="brand-item">🎬 VIMEO</div>
+      <div class="brand-item">📺 TWITCH</div>
+      <div class="brand-item">🎙 SPOTIFY</div>
+      <div class="brand-item">🎯 LINKEDIN</div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────── ABOUT ──────────────── -->
+<section id="about" style="position:relative; overflow:hidden;">
+  <div style="position:absolute; width:500px; height:500px; background:rgba(255,107,0,0.04); border-radius:50%; filter:blur(100px); top:-100px; right:-100px; pointer-events:none;"></div>
+  <div class="about">
+    <div class="about-img reveal">
+      <div class="about-img-inner">
+        <!-- Simulated editor at workstation -->
+        <svg width="85%" viewBox="0 0 320 380" fill="none" xmlns="http://www.w3.org/2000/svg" class="about-editor-mockup">
+          <!-- Monitor -->
+          <rect x="60" y="20" width="200" height="130" rx="8" fill="#1A1A1A" stroke="rgba(255,107,0,0.3)" stroke-width="1"/>
+          <rect x="70" y="28" width="180" height="110" rx="4" fill="#0D0D0D"/>
+          <!-- Screen content -->
+          <rect x="80" y="36" width="100" height="60" rx="3" fill="rgba(255,107,0,0.1)" stroke="rgba(255,107,0,0.2)" stroke-width="0.5"/>
+          <rect x="186" y="36" width="54" height="28" rx="3" fill="rgba(255,255,255,0.04)"/>
+          <rect x="186" y="68" width="54" height="28" rx="3" fill="rgba(255,255,255,0.04)"/>
+          <!-- Play icon on screen -->
+          <polygon points="118,58 118,74 132,66" fill="rgba(255,107,0,0.7)"/>
+          <!-- Timeline bars -->
+          <rect x="80" y="102" width="160" height="5" rx="2.5" fill="rgba(255,255,255,0.06)"/>
+          <rect x="80" y="102" width="100" height="5" rx="2.5" fill="rgba(255,107,0,0.5)"/>
+          <rect x="80" y="112" width="160" height="3" rx="1.5" fill="rgba(255,255,255,0.04)"/>
+          <rect x="80" y="112" width="60" height="3" rx="1.5" fill="rgba(255,107,0,0.3)"/>
+          <!-- Monitor stand -->
+          <rect x="148" y="150" width="24" height="18" rx="2" fill="#1A1A1A"/>
+          <rect x="128" y="168" width="64" height="6" rx="3" fill="#222"/>
+          <!-- Keyboard -->
+          <rect x="80" y="200" width="160" height="55" rx="6" fill="#1A1A1A" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+          <g fill="rgba(255,255,255,0.08)">
+            <rect x="88" y="208" width="12" height="8" rx="1.5"/>
+            <rect x="104" y="208" width="12" height="8" rx="1.5"/>
+            <rect x="120" y="208" width="12" height="8" rx="1.5"/>
+            <rect x="136" y="208" width="12" height="8" rx="1.5"/>
+            <rect x="152" y="208" width="12" height="8" rx="1.5"/>
+            <rect x="168" y="208" width="12" height="8" rx="1.5"/>
+            <rect x="184" y="208" width="12" height="8" rx="1.5"/>
+            <rect x="88" y="220" width="16" height="8" rx="1.5"/>
+            <rect x="108" y="220" width="12" height="8" rx="1.5"/>
+            <rect x="124" y="220" width="12" height="8" rx="1.5"/>
+            <rect x="140" y="220" width="12" height="8" rx="1.5"/>
+            <rect x="156" y="220" width="12" height="8" rx="1.5"/>
+            <rect x="172" y="220" width="20" height="8" rx="1.5"/>
+            <rect x="96" y="232" width="128" height="8" rx="1.5"/>
+            <rect x="88" y="232" width="6" height="8" rx="1.5"/>
+            <rect x="226" y="232" width="6" height="8" rx="1.5"/>
+          </g>
+          <!-- Person outline (editor silhouette) -->
+          <ellipse cx="160" cy="310" rx="30" ry="28" fill="rgba(255,107,0,0.12)"/>
+          <path d="M110 380 Q110 330 160 330 Q210 330 210 380" fill="rgba(255,107,0,0.08)"/>
+          <!-- Glow on screen -->
+          <ellipse cx="160" cy="80" rx="60" ry="40" fill="rgba(255,107,0,0.06)"/>
+        </svg>
+      </div>
+      <div class="about-img-badge"></div>
+      <!-- Floating stat cards -->
+      <div class="float-card" style="position:absolute; bottom:30px; right:-10px; animation: floatAnim 3.5s ease-in-out infinite .8s;">
+        <div class="float-icon">🏆</div>
+        <div>
+          <div class="float-card-num">15</div>
+          <div class="float-card-sub">Industry Awards</div>
+        </div>
+      </div>
+    </div>
+    <div class="about-text">
+      <div class="section-eyebrow reveal">About Us</div>
+      <h2 class="section-h2 reveal reveal-delay-1">
+        Turning Raw Footage<br>Into <span class="highlight">Pure Art</span>
+      </h2>
+      <p class="about-body reveal reveal-delay-2">
+        With over 10 years of experience in the film and advertising industry, we've crafted thousands of stories that resonate, engage, and inspire action. Our approach combines technical mastery with creative intuition. We don't just edit videos—we sculpt emotions, build narratives, and create experiences that leave lasting impressions. From indie films to global brand campaigns, our work has been featured across major platforms and awarded by industry leaders. We bring the same passion and precision to every project, no matter the scale.
+      </p>
+      <div class="stats-row reveal reveal-delay-3">
+        <div class="stat-item">
+          <span class="stat-num" data-target="500">0</span>
+          <span class="stat-label">Projects Delivered</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" data-target="50">0</span>
+          <span class="stat-label">Global Clients</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num" data-target="15">0</span>
+          <span class="stat-label">Industry Awards</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────── FEATURED WORK ──────────────── -->
+<section class="featured" id="work">
+  <div class="section-header reveal" style="max-width:1200px; margin:0 auto 50px;">
+    <div class="section-header-left">
+      <div class="section-eyebrow">Featured Work</div>
+      <h2 class="section-h2" style="margin-bottom:0;">A glimpse into our recent<br>editing work & collaborations</h2>
+    </div>
+    <div class="work-filters">
+      <button class="filter-btn active" onclick="filterWork(this,'all')">All Work</button>
+      <button class="filter-btn" onclick="filterWork(this,'long')">Long Form</button>
+      <button class="filter-btn" onclick="filterWork(this,'ads')">Ads & VSL</button>
+    </div>
+  </div>
+
+  <div class="work-grid reveal" style="max-width:1200px; margin:0 auto;" id="work-grid">
+
+    <div class="work-card work-card-large" data-cat="long">
+      <div class="work-card-bg">
+        <div>
+          <div style="font-size:3rem; margin-bottom:8px; opacity:.3;">👨‍🎓</div>
+          <div>STUDENTS<br>WHO WIN</div>
+        </div>
+      </div>
+      <span class="work-card-label">Long Form</span>
+      <div class="work-card-overlay">
+        <div class="work-card-title">Students Documentary – Brand Campaign</div>
+      </div>
+      <div class="work-play">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+    </div>
+
+    <div class="work-card" data-cat="ads">
+      <div class="work-card-bg" style="background:linear-gradient(135deg,#0a1a0a,#1a3d00); font-size:1.4rem; flex-direction:column; gap:6px;">
+        <div style="font-size:2.5rem; opacity:.4;">⚡</div>
+        <div>10X FASTER<br>RESULTS</div>
+        <div style="font-size:.8rem; color:rgba(255,107,0,0.6);">YOUTUBE AD</div>
+      </div>
+      <span class="work-card-label">Ads</span>
+      <div class="work-card-overlay">
+        <div class="work-card-title">10X Faster – YouTube Ad</div>
+      </div>
+      <div class="work-play">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+    </div>
+
+    <div class="work-card" data-cat="long">
+      <div class="work-card-bg" style="background:linear-gradient(135deg,#0d0d1a,#1a1a3d); font-size:1.2rem; flex-direction:column; gap:4px;">
+        <div style="font-size:2.5rem; opacity:.4;">🎙</div>
+        <div>MR. BEAST'S<br>YOUTUBE SECRET</div>
+      </div>
+      <span class="work-card-label">Long Form</span>
+      <div class="work-card-overlay">
+        <div class="work-card-title">MrBeast – YouTube Strategy Video</div>
+      </div>
+      <div class="work-play">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+    </div>
+
+    <div class="work-card" data-cat="ads">
+      <div class="work-card-bg" style="background:linear-gradient(135deg,#1a0a1a,#2d003d); font-size:1.2rem; flex-direction:column; gap:4px;">
+        <div style="font-size:2.5rem; opacity:.4;">🧠</div>
+        <div>NEGATIVE<br>IMPULSE?</div>
+      </div>
+      <span class="work-card-label">VSL</span>
+      <div class="work-card-overlay">
+        <div class="work-card-title">Negative Impulse – VSL Campaign</div>
+      </div>
+      <div class="work-play">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+    </div>
+
+    <div class="work-card work-card-large" data-cat="long">
+      <div class="work-card-bg" style="background:linear-gradient(135deg,#1a0800,#3d1800); font-size:1.4rem; flex-direction:column; gap:8px;">
+        <div style="font-size:2.5rem; opacity:.4;">🎬</div>
+        <div>CINEMATIC<br>BRAND STORY</div>
+        <div style="font-size:.7rem; color:rgba(255,107,0,0.5); letter-spacing:.1em;">FILM PRODUCTION</div>
+      </div>
+      <span class="work-card-label">Long Form</span>
+      <div class="work-card-overlay">
+        <div class="work-card-title">Cinematic Brand Story – Corporate Film</div>
+      </div>
+      <div class="work-play">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ──────────────── TESTIMONIALS ──────────────── -->
+<section id="testimonials" style="background: var(--dark);">
+  <div class="testimonials">
+    <div style="text-align:center;" class="reveal">
+      <div class="section-eyebrow" style="justify-content:center;">Client Testimonials</div>
+      <h2 class="section-h2">What our clients say<br>about <span class="highlight">working with us</span></h2>
+    </div>
+    <div class="testi-grid">
+      <div>
+        <div class="testi-card reveal">
+          <div class="testi-quote">"</div>
+          <div class="testi-stars">
+            <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+          </div>
+          <p class="testi-text">
+            "Working with this team transformed our brand campaign. Their attention to detail and creative vision exceeded all expectations. Every frame was perfection — they truly understand storytelling at the deepest level."
+          </p>
+          <div class="testi-author">
+            <div class="testi-avatar">SJ</div>
+            <div class="testi-author-info">
+              <div class="testi-name">Sarah Johnson</div>
+              <div class="testi-role">Creative Director, Nike</div>
+            </div>
+          </div>
+        </div>
+        <div class="testi-card reveal reveal-delay-1" style="margin-top:16px;">
+          <div class="testi-quote">"</div>
+          <div class="testi-stars">
+            <span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span><span class="star">★</span>
+          </div>
+          <p class="testi-text">
+            "The turnaround time was incredible and the quality surpassed what we expected. Our YouTube views tripled after the edits. RedFlame is now our go-to for all video content."
+          </p>
+          <div class="testi-author">
+            <div class="testi-avatar" style="background:linear-gradient(135deg,#6b00ff,#9b38ff);">MK</div>
+            <div class="testi-author-info">
+              <div class="testi-name">Marcus Kim</div>
+              <div class="testi-role">Content Creator, 2.4M Subs</div>
+            </div>
+          </div>
+        </div>
+        <div class="testi-dots">
+          <div class="testi-dot active"></div>
+          <div class="testi-dot"></div>
+          <div class="testi-dot"></div>
+        </div>
+      </div>
+      <div class="testi-person-img reveal reveal-delay-2">
+        <div class="testi-person-bg">
+          <svg width="65%" viewBox="0 0 200 320" fill="none">
+            <ellipse cx="100" cy="70" rx="50" ry="55" fill="rgba(255,107,0,0.2)" stroke="rgba(255,107,0,0.2)" stroke-width="0.5"/>
+            <path d="M20 320 C20 210 180 210 180 320" fill="rgba(255,107,0,0.12)"/>
+            <ellipse cx="100" cy="70" rx="30" ry="35" fill="rgba(255,107,0,0.15)"/>
+          </svg>
+          <div style="position:absolute; bottom:0; left:0; right:0; height:50%; background:linear-gradient(to top, rgba(10,10,10,1) 0%, transparent 100%);"></div>
+          <div style="position:absolute; bottom:24px; left:24px; right:24px;">
+            <div style="font-family:'Bebas Neue',sans-serif; font-size:1.5rem; margin-bottom:4px;">Sarah Johnson</div>
+            <div style="font-size:.78rem; color:var(--orange); letter-spacing:.06em;">CREATIVE DIRECTOR · NIKE</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────── SERVICES ──────────────── -->
+<section class="services" id="services">
+  <div class="services-inner">
+    <div class="services-header reveal">
+      <div class="section-eyebrow">Our Services</div>
+      <h2 class="section-h2">Comprehensive video production<br>solutions <span class="highlight">tailored to your goals</span></h2>
+      <p style="color:rgba(255,255,255,.4); font-size:.9rem; margin-top:12px; max-width:500px; text-align:center; font-weight:300;">From concept to delivery, we handle every aspect of your video production pipeline with precision and creativity.</p>
+    </div>
+    <div class="services-grid">
+
+      <div class="service-card reveal">
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M21 4H3a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1z"/><path d="M9 9l6 3-6 3V9z"/></svg>
+        </div>
+        <div class="service-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <h3 class="service-title">Video Editing</h3>
+        <p class="service-desc">Transform raw footage into polished, compelling content optimized for maximum audience engagement and retention across all platforms.</p>
+      </div>
+
+      <div class="service-card reveal reveal-delay-1">
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M8 12h8M12 8v8"/></svg>
+        </div>
+        <div class="service-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <h3 class="service-title">Shorts & Reels</h3>
+        <p class="service-desc">Create viral short-form content optimized for Instagram Reels, YouTube Shorts, and TikTok that drive massive engagement overnight.</p>
+      </div>
+
+      <div class="service-card reveal reveal-delay-2">
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div class="service-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <h3 class="service-title">Motion Graphics</h3>
+        <p class="service-desc">Elevate your brand with stunning 2D/3D motion graphics, lower thirds, and dynamic visual effects that communicate complexity with clarity.</p>
+      </div>
+
+      <div class="service-card reveal reveal-delay-3">
+        <div class="service-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M22 8s-4-3-10-3S2 8 2 8s4 3 10 3 10-3 10-3z"/><path d="M2 16s4-3 10-3 10 3 10 3"/></svg>
+        </div>
+        <div class="service-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+        <h3 class="service-title">Commercial Ads</h3>
+        <p class="service-desc">Produce high-converting video ads and VSLs that captivate your target audience and inspire immediate, measurable action.</p>
+      </div>
+
+    </div>
+
+    <!-- CTA below services -->
+    <div style="text-align:center; margin-top:48px;" class="reveal">
+      <a href="#contact" class="btn-primary" style="display:inline-flex;">
+        View All Services →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────── PROCESS ──────────────── -->
+<section id="process" style="background:var(--dark);">
+  <div class="process">
+    <div class="process-header reveal">
+      <div class="section-eyebrow" style="justify-content:center;">Our Process</div>
+      <h2 class="section-h2">From concept to completion<br>in <span class="highlight">four seamless steps</span></h2>
+    </div>
+    <div class="process-steps">
+      <div class="process-step reveal">
+        <div class="process-num">01</div>
+        <div style="font-size:1.5rem; margin-bottom:14px;">🔍</div>
+        <h3 class="process-step-title">Discover & Strategy</h3>
+        <p class="process-step-desc">We deep dive into your brand, target audience, and campaign goals to build the perfect creative strategy for your video.</p>
+      </div>
+      <div class="process-step reveal reveal-delay-1">
+        <div class="process-num">02</div>
+        <div style="font-size:1.5rem; margin-bottom:14px;">✏️</div>
+        <h3 class="process-step-title">Creative Production</h3>
+        <p class="process-step-desc">Our editors transform your footage into compelling narratives with custom music, color grading, and motion graphics.</p>
+      </div>
+      <div class="process-step reveal reveal-delay-2">
+        <div class="process-num">03</div>
+        <div style="font-size:1.5rem; margin-bottom:14px;">🔄</div>
+        <h3 class="process-step-title">Review & Revisions</h3>
+        <p class="process-step-desc">Sharing previews, gathering feedback, and polishing every frame until the edit matches your vision perfectly.</p>
+      </div>
+      <div class="process-step reveal reveal-delay-3">
+        <div class="process-num">04</div>
+        <div style="font-size:1.5rem; margin-bottom:14px;">🚀</div>
+        <h3 class="process-step-title">Final Delivery</h3>
+        <p class="process-step-desc">Your final video delivered in multiple formats, ready to publish on YouTube, Instagram, or any platform, on time.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skills progress bars -->
+  <div class="skills-bar-section reveal">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:40px 80px; max-width:900px; margin:0 auto;">
+      <div>
+        <div class="skill-bar-wrap">
+          <div class="skill-bar-top"><span>Color Grading</span><span>97%</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="97"></div></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-bar-top"><span>Motion Graphics</span><span>92%</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="92"></div></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-bar-top"><span>Storytelling</span><span>98%</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="98"></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="skill-bar-wrap">
+          <div class="skill-bar-top"><span>Sound Design</span><span>88%</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="88"></div></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-bar-top"><span>VFX & Compositing</span><span>85%</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="85"></div></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-bar-top"><span>Client Satisfaction</span><span>100%</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="100"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────── PRICING ──────────────── -->
+<section class="pricing" id="pricing">
+  <div class="pricing-inner">
+    <div class="pricing-header reveal">
+      <div class="section-eyebrow" style="justify-content:center;">Pricing Plan</div>
+      <h2 class="section-h2">Transparent pricing<br>for <span class="highlight">every project size</span></h2>
+      <!-- Tabs -->
+      <div style="display:flex; gap:8px; margin-top:24px; background:var(--dark3); border:1px solid var(--border); border-radius:100px; padding:4px; width:fit-content; margin-left:auto; margin-right:auto;">
+        <button onclick="setPricingTab(this,'monthly')" class="pricing-tab active-tab" style="padding:8px 22px; border-radius:100px; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:500; background:var(--orange); color:#fff; transition:all .3s;">Monthly</button>
+        <button onclick="setPricingTab(this,'longform')" class="pricing-tab" style="padding:8px 22px; border-radius:100px; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:500; background:transparent; color:var(--muted); transition:all .3s;">Long Form</button>
+        <button onclick="setPricingTab(this,'ads')" class="pricing-tab" style="padding:8px 22px; border-radius:100px; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.82rem; font-weight:500; background:transparent; color:var(--muted); transition:all .3s;">Ads & VSL</button>
+      </div>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Standard -->
+      <div class="pricing-card reveal">
+        <p class="pricing-plan-name">Standard</p>
+        <div class="pricing-price"><sub>$</sub>499<span style="font-family:'DM Sans',sans-serif; font-size:1rem; color:var(--muted);">/mo</span></div>
+        <p class="pricing-period">Per project · Quick edits</p>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><span class="check-icon">✓</span> Up to 10 minutes of content</li>
+          <li><span class="check-icon">✓</span> Basic color correction</li>
+          <li><span class="check-icon">✓</span> 2 rounds of revisions</li>
+          <li><span class="check-icon">✓</span> Licensed background music</li>
+          <li><span class="check-icon">✓</span> 48-hour delivery</li>
+          <li><span class="check-icon">✓</span> All export formats (1080p)</li>
+        </ul>
+        <button class="pricing-btn pricing-btn-outline">Get Started</button>
+      </div>
+
+      <!-- Premium (featured) -->
+      <div class="pricing-card featured reveal reveal-delay-1">
+        <span class="pricing-badge">Most Popular</span>
+        <p class="pricing-plan-name">Premium</p>
+        <div class="pricing-price"><sub>$</sub>2,999<span style="font-family:'DM Sans',sans-serif; font-size:1rem; color:rgba(255,255,255,.4);">/mo</span></div>
+        <p class="pricing-period" style="color:rgba(255,255,255,.4);">Unlimited revisions · Priority</p>
+        <div class="pricing-divider" style="background:rgba(255,107,0,0.2);"></div>
+        <ul class="pricing-features">
+          <li><span class="check-icon">✓</span> Unlimited video length</li>
+          <li><span class="check-icon">✓</span> Professional color grading</li>
+          <li><span class="check-icon">✓</span> Custom motion graphics</li>
+          <li><span class="check-icon">✓</span> Sound design & mixing</li>
+          <li><span class="check-icon">✓</span> Unlimited revisions</li>
+          <li><span class="check-icon">✓</span> 24-hour priority delivery</li>
+          <li><span class="check-icon">✓</span> 4K export + all formats</li>
+          <li><span class="check-icon">✓</span> Dedicated project manager</li>
+        </ul>
+        <button class="pricing-btn pricing-btn-primary">Start Now →</button>
+      </div>
+
+      <!-- Custom -->
+      <div class="pricing-card reveal reveal-delay-2">
+        <p class="pricing-plan-name">Custom</p>
+        <div class="pricing-price" style="font-size:2rem; line-height:1.2;">Let's<br>Talk</div>
+        <p class="pricing-period">Enterprise · Scale</p>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li><span class="check-icon">✓</span> Dedicated editing team</li>
+          <li><span class="check-icon">✓</span> Custom workflow integration</li>
+          <li><span class="check-icon">✓</span> White-label delivery</li>
+          <li><span class="check-icon">✓</span> SLA with guaranteed TAT</li>
+          <li><span class="check-icon">✓</span> Real-time collaboration</li>
+          <li><span class="check-icon">✓</span> Revisions based on feedback</li>
+        </ul>
+        <button class="pricing-btn pricing-btn-outline">Contact Us</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────── FAQ ──────────────── -->
+<section class="faq" id="faq">
+  <div class="faq-header reveal">
+    <div class="section-eyebrow" style="justify-content:center;">FAQ</div>
+    <h2 class="section-h2">Frequently Asked <span class="highlight">Questions</span></h2>
+    <p style="color:rgba(255,255,255,.4); font-size:.88rem; margin-top:12px; font-weight:300;">Everything you need to know before working with us</p>
+  </div>
+
+  <div id="faq-list" class="reveal">
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span>What file formats do you accept?</span>
+        <div class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></div>
+      </button>
+      <div class="faq-answer">We accept all major video formats including MP4, MOV, AVI, MXF, R3D, BRAW, and ProRes. We can also work with footage from any camera system including Sony, Canon, ARRI, RED, and DJI drones. Simply upload your files via our secure transfer portal and we'll handle the rest.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span>How long does a typical project take?</span>
+        <div class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></div>
+      </button>
+      <div class="faq-answer">Delivery time depends on the project scope. Standard edits (under 10 min) typically deliver in 48 hours. Long-form content (10–30 min) takes 3–5 business days. Complex projects with motion graphics or VFX may take 1–2 weeks. Rush delivery is available for Premium and Custom clients.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span>Do you offer revisions?</span>
+        <div class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></div>
+      </button>
+      <div class="faq-answer">Absolutely. Standard plan includes 2 revision rounds, Premium includes unlimited revisions until you're 100% satisfied. We believe the final product should perfectly match your vision, so we work with you until it does.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span>Can you work with my existing footage?</span>
+        <div class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></div>
+      </button>
+      <div class="faq-answer">Yes! That's our specialty. Whether you have a single camera shoot, multicam setup, screen recordings, stock footage, or mixed media, our editors are trained to work with all types of source material to create cohesive, polished final videos.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span>What if I need help after delivery?</span>
+        <div class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></div>
+      </button>
+      <div class="faq-answer">We provide 30-day post-delivery support for all clients. If you need minor adjustments — like updating a text overlay, swapping background music, or exporting in a different format — we'll handle it at no additional cost within that window.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-question" onclick="toggleFaq(this)">
+        <span>Do you offer monthly retainer packages?</span>
+        <div class="faq-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></div>
+      </button>
+      <div class="faq-answer">Yes! Our retainer packages are perfect for creators and brands that need consistent content output. You get a dedicated editor, priority queue, discounted rates, and a streamlined workflow so you can focus on creating while we handle the editing.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────── CTA ──────────────── -->
+<section class="cta-section" id="contact">
+  <div class="cta-inner reveal">
+    <div class="section-eyebrow" style="justify-content:center; margin-bottom:24px;">Ready to Start?</div>
+    <h2 class="cta-h2">Let's Build Something<br><span style="color:var(--orange);">Extraordinary</span></h2>
+    <p class="cta-sub">Schedule a free 30-minute strategy call with our team and discover how we can transform your video content into a powerful growth engine.</p>
+    <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+      <a href="mailto:hello@redflame.studio" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Get a Free Strategy Call
+      </a>
+      <a href="#work" class="btn-outline">View Our Portfolio</a>
+    </div>
+    <!-- Trust badges -->
+    <div style="display:flex; justify-content:center; gap:32px; margin-top:40px; flex-wrap:wrap;">
+      <div style="text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.6rem; color:var(--orange);">500+</div>
+        <div style="font-size:.72rem; color:rgba(255,255,255,.4); letter-spacing:.06em;">PROJECTS DONE</div>
+      </div>
+      <div style="width:1px; background:var(--border);"></div>
+      <div style="text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.6rem; color:var(--orange);">100%</div>
+        <div style="font-size:.72rem; color:rgba(255,255,255,.4); letter-spacing:.06em;">SATISFACTION</div>
+      </div>
+      <div style="width:1px; background:var(--border);"></div>
+      <div style="text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.6rem; color:var(--orange);">48HR</div>
+        <div style="font-size:.72rem; color:rgba(255,255,255,.4); letter-spacing:.06em;">FAST DELIVERY</div>
+      </div>
+      <div style="width:1px; background:var(--border);"></div>
+      <div style="text-align:center;">
+        <div style="font-family:'Bebas Neue',sans-serif; font-size:1.6rem; color:var(--orange);">24/7</div>
+        <div style="font-size:.72rem; color:rgba(255,255,255,.4); letter-spacing:.06em;">SUPPORT</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────────────── FOOTER ──────────────── -->
+<footer>
+  <div class="footer-top">
+    <div>
+      <a href="#" class="nav-logo" style="display:inline-flex;">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M9 0L16.5 4.5V13.5L9 18L1.5 13.5V4.5L9 0Z" fill="#FF6B00"/>
+        </svg>
+        Red<span>Flame</span>
+      </a>
+      <p class="footer-brand-desc">Professional video editing services for brands, creators, and agencies. Crafting visual stories that inspire audiences worldwide.</p>
+      <div class="footer-social">
+        <a href="#" class="social-link" aria-label="YouTube">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M23.5 6.2c-.3-1-1-1.8-2-2C19.7 4 12 4 12 4s-7.7 0-9.5.2c-1 .3-1.7 1-2 2C.3 8 .3 12 .3 12s0 4 .2 5.8c.3 1 1 1.8 2 2C4.3 20 12 20 12 20s7.7 0 9.5-.2c1-.3 1.7-1 2-2 .2-1.8.2-5.8.2-5.8s0-4-.2-5.8z" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><polygon points="9.7 15.5 15.7 12 9.7 8.5 9.7 15.5" fill="rgba(255,255,255,0.5)"/></svg>
+        </a>
+        <a href="#" class="social-link" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="rgba(255,255,255,0.5)" stroke="none"/></svg>
+        </a>
+        <a href="#" class="social-link" aria-label="Twitter">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
+        </a>
+        <a href="#" class="social-link" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+      </div>
+    </div>
+    <div>
+      <p class="footer-col-title">Navigation</p>
+      <ul class="footer-links">
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#work">Our Work</a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="footer-col-title">Services</p>
+      <ul class="footer-links">
+        <li><a href="#">Video Editing</a></li>
+        <li><a href="#">Shorts & Reels</a></li>
+        <li><a href="#">Motion Graphics</a></li>
+        <li><a href="#">Commercial Ads</a></li>
+        <li><a href="#">Podcast Editing</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="footer-col-title">Stay Connected</p>
+      <p style="font-size:.8rem; color:rgba(255,255,255,.4); line-height:1.6; margin-bottom:12px; font-weight:300;">Get video tips & behind-the-scenes content straight to your inbox.</p>
+      <div class="footer-email-input">
+        <input type="email" placeholder="Your email address">
+        <button class="footer-email-btn" aria-label="Subscribe">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+      <p style="font-size:.7rem; color:var(--muted2); margin-top:8px;">No spam, unsubscribe anytime.</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="footer-copy">© 2026 <span>RedFlame</span> Studio. All rights reserved.</p>
+    <div style="display:flex; gap:24px;">
+      <a href="#" style="font-size:.75rem; color:rgba(255,255,255,.3); text-decoration:none; transition:color .25s;" onmouseover="this.style.color='#FF6B00'" onmouseout="this.style.color='rgba(255,255,255,.3)'">Privacy Policy</a>
+      <a href="#" style="font-size:.75rem; color:rgba(255,255,255,.3); text-decoration:none; transition:color .25s;" onmouseover="this.style.color='#FF6B00'" onmouseout="this.style.color='rgba(255,255,255,.3)'">Terms of Service</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ──────────────── SCRIPTS ──────────────── -->
+<script>
+// ── CUSTOM CURSOR ──
+const cursor = document.getElementById('cursor');
+const ring = document.getElementById('cursor-ring');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx + 'px';
+  cursor.style.top = my + 'px';
+});
+function animRing() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  ring.style.left = rx + 'px';
+  ring.style.top = ry + 'px';
+  requestAnimationFrame(animRing);
+}
+animRing();
+document.querySelectorAll('a, button, .work-card, .service-card, .faq-question').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.transform = 'translate(-50%,-50%) scale(2)';
+    ring.style.transform = 'translate(-50%,-50%) scale(1.5)';
+    ring.style.borderColor = 'rgba(255,107,0,0.4)';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.transform = 'translate(-50%,-50%) scale(1)';
+    ring.style.transform = 'translate(-50%,-50%) scale(1)';
+    ring.style.borderColor = 'var(--orange)';
+  });
+});
+
+// ── PARTICLES ──
+const canvas = document.getElementById('particles-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+function resizeCanvas() {
+  canvas.width = canvas.offsetWidth;
+  canvas.height = canvas.offsetHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+for (let i = 0; i < 60; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.5 + 0.3,
+    dx: (Math.random() - 0.5) * 0.3,
+    dy: (Math.random() - 0.5) * 0.3,
+    alpha: Math.random() * 0.4 + 0.1
+  });
+}
+function drawParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(255, 107, 0, ${p.alpha})`;
+    ctx.fill();
+    p.x += p.dx; p.y += p.dy;
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+  });
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+// ── NAVBAR SCROLL ──
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 40);
+});
+
+// ── HAMBURGER ──
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobile-menu');
+let menuOpen = false;
+hamburger.addEventListener('click', () => {
+  menuOpen = !menuOpen;
+  mobileMenu.style.display = 'flex';
+  setTimeout(() => mobileMenu.classList.toggle('open', menuOpen), 10);
+  hamburger.querySelectorAll('span')[0].style.transform = menuOpen ? 'rotate(45deg) translateY(7px)' : '';
+  hamburger.querySelectorAll('span')[1].style.opacity = menuOpen ? '0' : '1';
+  hamburger.querySelectorAll('span')[2].style.transform = menuOpen ? 'rotate(-45deg) translateY(-7px)' : '';
+});
+function closeMobileMenu() {
+  menuOpen = false;
+  mobileMenu.classList.remove('open');
+  hamburger.querySelectorAll('span')[0].style.transform = '';
+  hamburger.querySelectorAll('span')[1].style.opacity = '1';
+  hamburger.querySelectorAll('span')[2].style.transform = '';
+}
+
+// ── SCROLL REVEAL ──
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('revealed');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+reveals.forEach(el => observer.observe(el));
+
+// ── STAT COUNTER ──
+const statNums = document.querySelectorAll('.stat-num[data-target]');
+const statObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      const target = parseInt(el.dataset.target);
+      let current = 0;
+      const step = target / 60;
+      const interval = setInterval(() => {
+        current = Math.min(current + step, target);
+        el.textContent = Math.floor(current) + (target >= 100 ? '+' : '');
+        if (current >= target) {
+          el.textContent = target + (target >= 100 ? '+' : '');
+          clearInterval(interval);
+        }
+      }, 16);
+      statObserver.unobserve(el);
+    }
+  });
+}, { threshold: 0.5 });
+statNums.forEach(el => statObserver.observe(el));
+
+// ── SKILL BARS ──
+const skillBars = document.querySelectorAll('.skill-bar-fill');
+const barObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      setTimeout(() => {
+        el.style.width = el.dataset.width + '%';
+      }, 200);
+      barObserver.unobserve(el);
+    }
+  });
+}, { threshold: 0.3 });
+skillBars.forEach(el => barObserver.observe(el));
+
+// ── FAQ TOGGLE ──
+function toggleFaq(btn) {
+  const item = btn.parentElement;
+  const wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+  if (!wasOpen) item.classList.add('open');
+}
+
+// ── WORK FILTER ──
+function filterWork(btn, cat) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const cards = document.querySelectorAll('.work-card');
+  cards.forEach(card => {
+    if (cat === 'all' || card.dataset.cat === cat) {
+      card.style.opacity = '1';
+      card.style.transform = 'scale(1)';
+      card.style.display = '';
+    } else {
+      card.style.opacity = '0.25';
+      card.style.transform = 'scale(0.97)';
+    }
+  });
+}
+
+// ── PRICING TABS ──
+function setPricingTab(btn, tab) {
+  document.querySelectorAll('.pricing-tab').forEach(b => {
+    b.style.background = 'transparent';
+    b.style.color = 'var(--muted)';
+  });
+  btn.style.background = 'var(--orange)';
+  btn.style.color = '#fff';
+}
+
+// ── SMOOTH ANCHOR SCROLL ──
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// ── ACTIVE NAV HIGHLIGHT ──
+const sections = document.querySelectorAll('section[id], div.brands');
+const navLinks = document.querySelectorAll('.nav-links a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 100) current = sec.id;
+  });
+  navLinks.forEach(link => {
+    link.style.color = link.getAttribute('href') === '#' + current
+      ? 'var(--orange)' : '';
+  });
+}, { passive: true });
+
+// ── TESTI DOT CLICK ──
+document.querySelectorAll('.testi-dot').forEach((dot, i) => {
+  dot.addEventListener('click', () => {
+    document.querySelectorAll('.testi-dot').forEach(d => d.classList.remove('active'));
+    dot.classList.add('active');
+  });
+});
+
+// ── AUTO-CYCLE TESTI DOTS ──
+let dotIdx = 0;
+setInterval(() => {
+  const dots = document.querySelectorAll('.testi-dot');
+  dots.forEach(d => d.classList.remove('active'));
+  dotIdx = (dotIdx + 1) % dots.length;
+  dots[dotIdx].classList.add('active');
+}, 3500);
+
+// ── PARALLAX HERO BG ──
+window.addEventListener('scroll', () => {
+  const scrollY = window.scrollY;
+  const heroBg = document.querySelector('.hero-bg');
+  if (heroBg) heroBg.style.transform = `translateY(${scrollY * 0.3}px)`;
+}, { passive: true });
+
+// ── HOVER TILT FOR CARDS ──
+document.querySelectorAll('.work-card, .service-card, .pricing-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    const rotX = -(y / rect.height) * 6;
+    const rotY = (x / rect.width) * 6;
+    card.style.transform = `perspective(800px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-6px)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+    card.style.transition = 'transform .5s ease';
+    setTimeout(() => card.style.transition = '', 500);
+  });
+});
+
+// ── FOOTER EMAIL ──
+document.querySelector('.footer-email-btn').addEventListener('click', () => {
+  const input = document.querySelector('.footer-email-input input');
+  if (input.value.includes('@')) {
+    input.value = '✓ Subscribed! Thank you';
+    input.style.color = '#4CAF50';
+    setTimeout(() => { input.value = ''; input.style.color = ''; }, 3000);
+  }
+});
+
+// ── MOBILE RESPONSIVENESS CHECK ──
+function checkMobile() {
+  if (window.innerWidth > 768 && menuOpen) closeMobileMenu();
+}
+window.addEventListener('resize', checkMobile);
+</script>
+
+</body>
+</html>
